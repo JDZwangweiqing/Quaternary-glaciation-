@@ -431,35 +431,21 @@ function antCapPath(m){
   path.lineTo(W,H); path.lineTo(0,H); path.closePath();
   return path;
 }
-/* 冰缘外散落浮冰（确定性，随帧稳定；仅画在海面——由底图海洋掩膜判断） */
-let oceanMask=null, OMW=384, OMH=192;
-function buildOceanMask(){
-  const mc=document.createElement('canvas'); mc.width=OMW; mc.height=OMH;
-  const mg=mc.getContext('2d'); mg.drawImage(baseCv,0,0,OMW,OMH);
-  const md=mg.getImageData(0,0,OMW,OMH).data;
-  oceanMask=new Uint8Array(OMW*OMH);
-  for(let i=0;i<OMW*OMH;i++){
-    const r=md[i*4],g=md[i*4+1],b=md[i*4+2];
-    oceanMask[i]=(b>r+8&&b>g+3)?1:0;
+/* 海洋精灵图：从底图颜色检测海洋（NE2 海洋为特征蓝色），全分辨率，
+   用于把海冰裁剪到海面——不覆盖任何陆地 */
+let oceanSprite=null;
+function buildOceanSprite(){
+  const md=baseCv.getContext('2d').getImageData(0,0,W,H).data;
+  const oc=document.createElement('canvas'); oc.width=W; oc.height=H;
+  const og=oc.getContext('2d');
+  const od=og.createImageData(W,H);
+  for(let i=0;i<W*H;i++){
+    const r=md[i*4],g2=md[i*4+1],b=md[i*4+2];
+    od.data[i*4]=226; od.data[i*4+1]=238; od.data[i*4+2]=250;      /* 海冰色 */
+    od.data[i*4+3]=(b>r+8&&b>g2+3)?255:0;                          /* 仅海洋 */
   }
-}
-function drawFloes(g,edge,south){
-  if(!oceanMask) return;
-  g.save(); g.fillStyle='#f4f8fd';
-  for(let c2=0;c2<144;c2++){
-    const r0=hash2(c2,7),r1=hash2(c2,13),r2=hash2(c2,29),r3=hash2(c2,53);
-    if(r3<0.35) continue;
-    const lon=-180+c2*2.5+r0*2;
-    const dOut=1+r1*6;
-    const lat=south? edge+dOut : edge-dOut;
-    const mi=clamp(Math.floor((90-lat)/180*OMH),0,OMH-1)*OMW+clamp(Math.floor((lon+180)/360*OMW),0,OMW-1);
-    if(!oceanMask[mi]) continue;          /* 陆地上不画浮冰 */
-    const [x,y]=px(lon,lat);
-    const rr=1.2+r2*3.2;
-    g.globalAlpha=0.5*(1-(dOut-1)/7)+0.12;
-    g.beginPath(); g.ellipse(x,y,rr*1.6,rr,r2*3.1,0,Math.PI*2); g.fill();
-  }
-  g.restore();
+  og.putImageData(od,0,0);
+  oceanSprite=oc;
 }
 let lastDynKey='';
 /* 大陆架精灵图：底色 × 精确掩膜（NE 测深 0~-200m），预合成一次，逐帧仅调透明度 */
@@ -479,7 +465,20 @@ function redrawDyn(){
   lastDynKey=key;
   const g=dctx;
   g.clearRect(0,0,W,H);
-  /* 出露大陆架（位置与范围=NE 测深 0~-200m 精确掩膜；不透明度 90%） */
+  /* 海冰（终年冰冻区）：先画，且 clip 到冰盖范围 × 海洋掩膜——不覆盖陆地 */
+  if(opts.sea && oceanSprite){
+    g.save();
+    g.clip(capPath(st.sN,false));
+    g.globalAlpha=0.5;
+    g.drawImage(oceanSprite,0,0);
+    g.restore();
+    g.save();
+    g.clip(capPath(-st.sS,true));
+    g.globalAlpha=0.5;
+    g.drawImage(oceanSprite,0,0);
+    g.restore();
+  }
+  /* 出露大陆架（位置与范围=NE 测深 0~-200m 精确掩膜；不透明度 90%；后画可盖住陆架上的海冰） */
   if(opts.shelf && shelfSprite){
     const a=smooth(40,130,-st.sea);
     if(a>0.01){
@@ -499,18 +498,6 @@ function redrawDyn(){
         g.fillStyle='rgba(255,255,255,.9)'; g.fill(path);   /* 白色，不透明度 90% */
       } else if(m>0.02) drawIceRegion(g,R,m);
     });
-  }
-  /* 海冰 */
-  if(opts.sea){
-    const pN=capPath(st.sN,false), pS=capPath(-st.sS,true);
-    g.save();
-    g.shadowColor='rgba(222,236,248,.8)'; g.shadowBlur=7;
-    g.fillStyle='rgba(226,238,250,.5)';
-    g.fill(pN); g.fill(pS);
-    g.shadowBlur=0;
-    g.globalCompositeOperation='multiply'; g.globalAlpha=0.10;
-    g.fillStyle=noisePattern(g); g.fill(pN); g.fill(pS);
-    g.restore();
   }
   /* 经纬网 */
   if(opts.grid){
@@ -538,7 +525,7 @@ function init3D(THREE,imgBase,imgTopo,imgShelf){
   camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,0.1,200);
   /* 地球：真实卫星影像 + 地形凹凸 + 海洋高光 */
   buildBase(imgBase);
-  buildOceanMask();
+  buildOceanSprite();
   buildShelfSprite(imgShelf);
   cctx.drawImage(baseCv,0,0);
   texture=new THREE.CanvasTexture(compCv);
