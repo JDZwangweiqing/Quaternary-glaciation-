@@ -11,10 +11,15 @@
   #gl:active{cursor:grabbing;}
   .panel{position:fixed;background:rgba(9,15,28,.82);border:1px solid rgba(120,160,220,.18);
     border-radius:12px;backdrop-filter:blur(10px);box-shadow:0 4px 24px rgba(0,0,0,.45);}
-  #hdr{top:14px;left:16px;padding:10px 16px 11px;}
+  /* 左侧平面数据窗口：标题 / 时期数据 / 图例统一收纳 */
+  #side{position:fixed;left:14px;top:14px;bottom:100px;width:301px;z-index:5;
+    display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.4) transparent;}
+  #side .panel{position:static;flex:none;}
+  #hdr{padding:10px 16px 11px;}
   #hdr h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.5px;}
   #hdr .sub{margin-top:2px;font-size:11.5px;color:#9fb4cf;}
-  #info{top:14px;right:16px;width:295px;padding:12px 14px;}
+  #info{padding:12px 14px;}
   #info .epoch{font-size:15px;font-weight:700;color:#cfe3ff;}
   #info .mis{font-size:11px;color:#8fb0d8;margin-left:6px;}
   #info .age{font-size:12px;color:#9fb4cf;margin-top:1px;}
@@ -27,7 +32,7 @@
   #desc{margin-top:9px;font-size:11.5px;line-height:1.62;color:#c2d3e8;}
   #spark{display:block;margin-top:8px;width:100%;height:58px;}
   .spark-cap{font-size:10px;color:#7e95b4;margin-top:3px;}
-  #legend{left:16px;bottom:96px;padding:9px 12px;font-size:11px;color:#c2d3e8;}
+  #legend{padding:9px 12px;font-size:11px;color:#c2d3e8;}
   #legend .row{display:flex;align-items:center;gap:7px;margin:3.5px 0;}
   #legend .sw{width:15px;height:11px;border-radius:3px;border:1px solid rgba(255,255,255,.25);flex:none;}
   #ctrl{left:16px;bottom:96px;position:fixed;display:flex;flex-direction:column;gap:5px;}
@@ -37,27 +42,36 @@
     color:#c2d3e8;cursor:pointer;user-select:none;transition:all .15s;}
   .tg:hover{border-color:rgba(140,190,255,.5);}
   .tg input{accent-color:#4d8fe0;cursor:pointer;}
-  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:min(720px,calc(100vw - 390px));
-    min-width:340px;padding:9px 14px 8px;}
-  #bar .row1{display:flex;align-items:center;gap:10px;}
+  /* 时间轴竖排面板（右侧） */
+  #bar{position:fixed;right:14px;top:14px;bottom:100px;width:106px;padding:10px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:9px;}
+  #bar .row1{flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;width:100%;min-height:0;}
   #play{width:34px;height:34px;border-radius:50%;border:1px solid rgba(140,190,255,.4);
     background:rgba(50,100,180,.25);color:#eaf3ff;font-size:14px;cursor:pointer;flex:none;
     display:flex;align-items:center;justify-content:center;transition:background .15s;}
   #play:hover{background:rgba(70,130,220,.45);}
-  #tl{flex:1;position:relative;height:34px;}
-  #slider{position:absolute;left:0;right:0;top:8px;width:100%;margin:0;-webkit-appearance:none;appearance:none;
-    height:5px;border-radius:3px;background:linear-gradient(90deg,#7fb2ff,#2a5fae);outline:none;cursor:pointer;}
+  #tl{flex:1;width:100%;position:relative;min-height:120px;}
+  #tl::before{content:'258万年前';position:absolute;left:1px;top:0;font-size:9px;color:#8fa8c8;}
+  #tl::after{content:'现今';position:absolute;left:1px;bottom:0;font-size:9px;color:#8fa8c8;}
+  #slider{position:absolute;left:50px;top:15px;bottom:15px;height:auto;width:5px;
+    margin:0;-webkit-appearance:none;appearance:none;
+    writing-mode:vertical-lr;direction:ltr;
+    border-radius:3px;background:linear-gradient(180deg,#7fb2ff,#2a5fae);outline:none;cursor:pointer;}
   #slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;
     background:#fff;border:2px solid #3d7bd9;box-shadow:0 0 8px rgba(120,180,255,.8);cursor:pointer;}
   #slider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid #3d7bd9;cursor:pointer;}
-  .tick{position:absolute;top:22px;font-size:9.5px;color:#8fa8c8;transform:translateX(-50%);white-space:nowrap;pointer-events:none;}
-  .tick::before{content:'';position:absolute;left:50%;top:-7px;width:1px;height:5px;background:rgba(140,180,230,.5);}
-  #cur{position:absolute;top:-4px;font-size:10px;color:#cfe3ff;transform:translateX(-50%);white-space:nowrap;pointer-events:none;font-weight:600;}
-  #speeds{display:flex;gap:3px;flex:none;}
+  .tick{position:absolute;left:1px;width:42px;font-size:9px;color:#8fa8c8;line-height:1.1;
+    white-space:normal;pointer-events:none;transform:translateY(50%);}
+  .tick::before{content:'';position:absolute;left:43px;top:50%;width:5px;height:1px;background:rgba(140,180,230,.5);}
+  #cur{position:absolute;left:56px;width:46px;font-size:9px;color:#cfe3ff;white-space:normal;pointer-events:none;
+    font-weight:600;transform:translateY(50%);text-align:left;line-height:1.2;
+    background:rgba(9,15,28,.92);border-radius:4px;padding:1px 3px;}
+  #speeds{display:flex;flex-direction:column;gap:4px;flex:none;}
+  #bar .row2{display:none;}
   .spd{border:1px solid rgba(120,160,220,.25);background:transparent;color:#9fb4cf;font-size:10.5px;
     border-radius:6px;padding:3px 7px;cursor:pointer;}
   .spd.on{background:rgba(80,140,230,.35);color:#fff;border-color:rgba(140,190,255,.6);}
-  #bar .row2{display:flex;justify-content:space-between;margin-top:2px;font-size:10.5px;color:#8fa8c8;}
+  #bar .row2{display:none;}   /* 竖排模式：底部横排说明取消 */
   #load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
     gap:14px;background:#ffffff;z-index:50;transition:opacity .6s;}
   #load .ring{width:46px;height:46px;border-radius:50%;border:3px solid rgba(100,150,220,.2);
@@ -66,8 +80,9 @@
   #load .txt{font-size:13px;color:#5a7896;letter-spacing:2px;}
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#ffffff;
     z-index:60;color:#ff9a9a;font-size:14px;padding:40px;text-align:center;line-height:1.8;}
-  #note{position:fixed;right:16px;bottom:14px;font-size:10px;color:#5d7290;max-width:290px;text-align:right;line-height:1.5;}
-  #srcBtn{position:fixed;right:16px;bottom:64px;cursor:pointer;border:1px solid rgba(140,190,255,.35);
+  #note{position:fixed;left:50%;transform:translateX(-50%);bottom:52px;font-size:10px;color:#5d7290;
+    max-width:min(620px,64vw);text-align:center;line-height:1.5;}
+  #srcBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;cursor:pointer;border:1px solid rgba(140,190,255,.35);
     background:rgba(9,15,28,.82);color:#cfe3ff;font-size:11.5px;border-radius:8px;padding:5px 11px;z-index:20;}
   #srcBtn:hover{background:rgba(60,110,190,.35);}
   #srcModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:70;background:rgba(2,5,10,.65);}
@@ -82,8 +97,11 @@
     width:26px;height:26px;cursor:pointer;font-size:13px;}
   #srcClose:hover{color:#fff;border-color:#8fc0ff;}
   @media (max-width:900px){
-    #info{width:250px;} #bar{width:calc(100vw - 24px);min-width:0;bottom:70px;}
-    #toggles{bottom:14px;left:12px;} #legend{display:none;} #note{display:none;} #ctrl{bottom:96px;}
+    #side{left:12px;right:12px;width:auto;top:12px;max-height:46vh;}
+    #bar{right:8px;width:78px;bottom:90px;}
+    #toggles{bottom:14px;left:12px;max-width:calc(100vw - 108px);}
+    #legend{display:none;} #note{display:none;} #ctrl{bottom:96px;}
+    #srcBtn{bottom:14px;}
   }
 </style>
 </head>
@@ -93,6 +111,7 @@
 <div id="load"><div class="ring"></div><div class="txt">正在构建 3D 地球 …</div></div>
 <div id="err"></div>
 
+<div id="side">
 <div id="hdr" class="panel">
   <h1>🧊 第四纪 · 全球冰川变迁</h1>
   <div class="sub">258 万年前 — 现在 · 陆地冰盖 / 海冰 / 海平面变化的交互式 3D 演示</div>
@@ -119,6 +138,7 @@
   <div class="row"><div class="sw" style="background:rgba(176,148,102,.9)"></div>海平面下降出露的大陆架</div>
   <div class="row"><div class="sw" style="background:#0e49a0"></div>海洋</div>
   <div class="row"><div class="sw" style="background:#5f8a54"></div>无冰陆地</div>
+</div>
 </div>
 
 <button id="srcBtn">📖 数据与文献来源</button>
@@ -624,9 +644,15 @@ function init3D(THREE,imgBase,imgTopo,imgShelf){
   /* 白色背景，不绘制星空 */
   scene.add(new THREE.AmbientLight(0xffffff,2.35));
   const dl=new THREE.DirectionalLight(0xffffff,2.05); dl.position.set(5,2,4); scene.add(dl);
+  function applyViewOffset(){   /* 宽屏时地球右移，避开左侧数据窗口 */
+    if(innerWidth>1100) camera.setViewOffset(innerWidth,innerHeight,-105,0,innerWidth,innerHeight);
+    else camera.clearViewOffset();
+  }
+  applyViewOffset();
   addEventListener('resize',()=>{
     camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
     renderer.setSize(innerWidth,innerHeight);
+    applyViewOffset();
   });
 }
 function updateCamera(){
@@ -664,7 +690,7 @@ const TICKS=[[2600,'第四纪开启'],[1200,'中更新世过渡'],[870,'MIS 22']
     const tk=TICKS.find(t=>t[0]===k.t);
     if(tk){
       const d=document.createElement('div'); d.className='tick';
-      d.style.left=(i/(N-1)*100)+'%'; d.textContent=tk[1];
+      d.style.bottom=(100-i/(N-1)*100)+'%'; d.textContent=tk[1];
       tl.appendChild(d);
     }
   });
@@ -696,7 +722,7 @@ function updateUI(){
     $('cur').textContent=fmtAgeShort(st.t);
     drawSpark(st);
   }
-  $('cur').style.left=(p/(N-1)*100)+'%';
+  $('cur').style.bottom=(100-p/(N-1)*100)+'%';
   if(document.activeElement!==slider) slider.value=p;
 }
 const spark=$('spark'), sctx=spark.getContext('2d');
